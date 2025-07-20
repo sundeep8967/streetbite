@@ -299,7 +299,7 @@ class _AnimatedMapWidgetState extends State<AnimatedMapWidget>
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            vendor.averageRating.toStringAsFixed(1),
+                            vendor.rating.toStringAsFixed(1),
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                           const Spacer(),
@@ -342,9 +342,7 @@ class _AnimatedMapWidgetState extends State<AnimatedMapWidget>
           ),
         ),
       ),
-    ).animate()
-     .slideY(begin: 1.0, end: 0.0, duration: AppAnimations.medium)
-     .fadeIn(duration: AppAnimations.medium);
+    );
   }
 
   void _centerOnUserLocation() async {

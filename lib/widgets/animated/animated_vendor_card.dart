@@ -313,7 +313,7 @@ class _AnimatedVendorCardState extends State<AnimatedVendorCard>
   }
 
   Widget _buildRatingWidget() {
-    final rating = widget.vendor.averageRating;
+    final rating = widget.vendor.rating;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(

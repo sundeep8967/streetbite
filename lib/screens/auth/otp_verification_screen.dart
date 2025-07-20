@@ -27,6 +27,8 @@ class OTPVerificationScreen extends StatefulWidget {
 
 class _OTPVerificationScreenState extends State<OTPVerificationScreen>
     with TickerProviderStateMixin {
+  final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   bool _isLoading = false;
   String _otpCode = '';
   
@@ -79,6 +81,12 @@ class _OTPVerificationScreenState extends State<OTPVerificationScreen>
 
   @override
   void dispose() {
+    for (var controller in _controllers) {
+      controller.dispose();
+    }
+    for (var node in _focusNodes) {
+      node.dispose();
+    }
     _slideController.dispose();
     _fadeController.dispose();
     super.dispose();

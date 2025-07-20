@@ -1,15 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:country_code_picker/country_code_picker.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/auth_provider.dart';
 import 'otp_verification_screen.dart';
-import '../../constants/app_animations.dart';
-import '../../constants/app_theme.dart';
-import '../../widgets/animated/animated_button.dart';
-import '../../widgets/animated/animated_card.dart';
-import '../../widgets/animated/page_transitions.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -39,12 +32,12 @@ class _LoginScreenState extends State<LoginScreen>
 
   void _initializeAnimations() {
     _slideController = AnimationController(
-      duration: AppAnimations.medium,
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
     
     _fadeController = AnimationController(
-      duration: AppAnimations.slow,
+      duration: const Duration(milliseconds: 500),
       vsync: this,
     );
 
@@ -53,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen>
       end: Offset.zero,
     ).animate(CurvedAnimation(
       parent: _slideController,
-      curve: AppAnimations.iosEaseInOut,
+      curve: Curves.easeInOut,
     ));
 
     _fadeAnimation = Tween<double>(
@@ -61,7 +54,7 @@ class _LoginScreenState extends State<LoginScreen>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _fadeController,
-      curve: AppAnimations.easeInOut,
+      curve: Curves.easeInOut,
     ));
   }
 

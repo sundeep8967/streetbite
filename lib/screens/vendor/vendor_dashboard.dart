@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/vendor_provider.dart';
 import '../../models/vendor_model.dart';
 import 'vendor_registration_screen.dart';
 import 'menu_management_screen.dart';
 import 'vendor_feedback_dashboard.dart';
-import '../../constants/app_animations.dart';
 import '../../constants/app_theme.dart';
-import '../../widgets/animated/animated_status_toggle.dart';
-import '../../widgets/animated/animated_stats_card.dart';
 import '../../widgets/animated/animated_card.dart';
 import '../../widgets/animated/page_transitions.dart';
 
@@ -36,7 +32,7 @@ class _VendorDashboardState extends State<VendorDashboard>
 
   void _initializeAnimations() {
     _fadeController = AnimationController(
-      duration: AppAnimations.medium,
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
 
@@ -45,7 +41,7 @@ class _VendorDashboardState extends State<VendorDashboard>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _fadeController,
-      curve: AppAnimations.easeInOut,
+      curve: Curves.easeInOut,
     ));
 
     // Start entrance animation
@@ -217,47 +213,55 @@ class _VendorDashboardState extends State<VendorDashboard>
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                       children: [
-                        _buildActionCard(
+                        _buildAnimatedActionCard(
                           icon: Icons.restaurant_menu,
                           title: 'Manage Menu',
                           subtitle: 'Add or edit items',
+                          color: AppTheme.primaryOrange,
+                          delay: const Duration(milliseconds: 700),
                           onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const MenuManagementScreen(),
-                              ),
+                            NavigationHelper.pushIOS(
+                              context,
+                              const MenuManagementScreen(),
                             );
                           },
                         ),
-                        _buildActionCard(
+                        _buildAnimatedActionCard(
                           icon: Icons.location_on,
                           title: 'Update Location',
                           subtitle: 'Set your stall location',
+                          color: AppTheme.iosGreen,
+                          delay: const Duration(milliseconds: 800),
                           onTap: () {
+                            HapticFeedback.lightImpact();
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Location update coming soon!')),
                             );
                           },
                         ),
-                        _buildActionCard(
+                        _buildAnimatedActionCard(
                           icon: Icons.people,
                           title: 'Followers',
                           subtitle: 'View your followers',
+                          color: AppTheme.iosPurple,
+                          delay: const Duration(milliseconds: 900),
                           onTap: () {
+                            HapticFeedback.lightImpact();
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Followers view coming soon!')),
                             );
                           },
                         ),
-                        _buildActionCard(
+                        _buildAnimatedActionCard(
                           icon: Icons.star,
                           title: 'Reviews',
                           subtitle: 'Check customer feedback',
+                          color: AppTheme.iosYellow,
+                          delay: const Duration(milliseconds: 1000),
                           onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const VendorFeedbackDashboard(),
-                              ),
+                            NavigationHelper.pushIOS(
+                              context,
+                              const VendorFeedbackDashboard(),
                             );
                           },
                         ),
@@ -321,9 +325,6 @@ class _VendorDashboardState extends State<VendorDashboard>
           ),
         ],
       ),
-    ).animate(delay: delay)
-     .fadeIn(duration: AppAnimations.medium)
-     .slideY(begin: 0.3, end: 0)
-     .scale(begin: const Offset(0.8, 0.8));
+    );
   }
 }

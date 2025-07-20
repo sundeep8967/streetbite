@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
-import '../../constants/app_animations.dart';
 import '../../constants/app_theme.dart';
 
 /// Success animation widget with checkmark and celebration
@@ -42,12 +41,12 @@ class _SuccessAnimationState extends State<SuccessAnimation>
 
   void _initializeAnimations() {
     _scaleController = AnimationController(
-      duration: AppAnimations.medium,
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
     
     _checkController = AnimationController(
-      duration: AppAnimations.slow,
+      duration: const Duration(milliseconds: 500),
       vsync: this,
     );
     
@@ -61,7 +60,7 @@ class _SuccessAnimationState extends State<SuccessAnimation>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _scaleController,
-      curve: AppAnimations.iosSpring,
+      curve: Curves.elasticOut,
     ));
 
     _checkAnimation = Tween<double>(
@@ -158,7 +157,7 @@ class _SuccessAnimationState extends State<SuccessAnimation>
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: (widget.color ?? AppTheme.iosGreen).withOpacity(0.3),
+                            color: (widget.color ?? AppTheme.iosGreen).withValues(alpha: 0.3),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -187,9 +186,7 @@ class _SuccessAnimationState extends State<SuccessAnimation>
               color: AppTheme.textPrimary,
             ),
             textAlign: TextAlign.center,
-          ).animate()
-           .fadeIn(delay: AppAnimations.medium, duration: AppAnimations.medium)
-           .slideY(begin: 0.3, end: 0),
+          ),
         ],
       ),
     );
@@ -284,7 +281,7 @@ class _ErrorAnimationState extends State<ErrorAnimation>
     );
     
     _scaleController = AnimationController(
-      duration: AppAnimations.medium,
+      duration: const Duration(milliseconds: 300),
       vsync: this,
     );
 
@@ -301,7 +298,7 @@ class _ErrorAnimationState extends State<ErrorAnimation>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _scaleController,
-      curve: AppAnimations.iosSpring,
+      curve: Curves.elasticOut,
     ));
   }
 
@@ -346,7 +343,7 @@ class _ErrorAnimationState extends State<ErrorAnimation>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.iosRed.withOpacity(0.3),
+                          color: AppTheme.iosRed.withValues(alpha: 0.3),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
@@ -372,9 +369,7 @@ class _ErrorAnimationState extends State<ErrorAnimation>
               color: AppTheme.textPrimary,
             ),
             textAlign: TextAlign.center,
-          ).animate()
-           .fadeIn(delay: AppAnimations.medium, duration: AppAnimations.medium)
-           .slideY(begin: 0.3, end: 0),
+          ),
         ],
       ),
     );

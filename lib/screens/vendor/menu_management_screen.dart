@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/menu_provider.dart';
 import '../../providers/vendor_provider.dart';
 import '../../models/menu_item_model.dart';
 import 'add_menu_item_screen.dart';
 import 'edit_menu_item_screen.dart';
-import '../../constants/app_animations.dart';
 import '../../constants/app_theme.dart';
 import '../../widgets/animated/animated_menu_item_card.dart';
-import '../../widgets/animated/animated_stats_card.dart';
 import '../../widgets/animated/animated_refresh_indicator.dart';
 import '../../widgets/animated/page_transitions.dart';
 

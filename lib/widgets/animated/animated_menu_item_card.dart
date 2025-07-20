@@ -372,9 +372,9 @@ class _AnimatedMenuItemCardState extends State<AnimatedMenuItemCard>
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 4),
-        if (widget.menuItem.description.isNotEmpty)
+        if (widget.menuItem.description?.isNotEmpty == true)
           Text(
-            widget.menuItem.description,
+            widget.menuItem.description ?? '',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: AppTheme.textSecondary,
             ),

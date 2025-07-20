@@ -50,7 +50,7 @@ class _CustomerHomeState extends State<CustomerHome> {
   Future<void> _refreshVendors() async {
     HapticFeedback.lightImpact();
     final customerProvider = Provider.of<CustomerProvider>(context, listen: false);
-    await customerProvider.refreshNearbyVendors();
+    await customerProvider.getCurrentLocation();
   }
 
   @override
