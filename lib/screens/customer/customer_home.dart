@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/customer_provider.dart';
 import '../../models/vendor_model.dart';
@@ -7,6 +9,13 @@ import 'vendor_list_screen.dart';
 import 'vendor_detail_screen.dart';
 import 'map_view_screen.dart';
 import '../settings/settings_screen.dart';
+import '../../constants/app_animations.dart';
+import '../../constants/app_theme.dart';
+import '../../widgets/animated/animated_bottom_nav.dart';
+import '../../widgets/animated/animated_card.dart';
+import '../../widgets/animated/animated_vendor_card.dart';
+import '../../widgets/animated/animated_refresh_indicator.dart';
+import '../../widgets/animated/page_transitions.dart';
 
 class CustomerHome extends StatefulWidget {
   const CustomerHome({super.key});
@@ -38,6 +47,12 @@ class _CustomerHomeState extends State<CustomerHome> {
     customerProvider.getCurrentLocation();
   }
 
+  Future<void> _refreshVendors() async {
+    HapticFeedback.lightImpact();
+    final customerProvider = Provider.of<CustomerProvider>(context, listen: false);
+    await customerProvider.refreshNearbyVendors();
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -58,8 +73,7 @@ class _CustomerHomeState extends State<CustomerHome> {
           _buildProfileTab(authProvider),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
+      bottomNavigationBar: AnimatedBottomNav(
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
@@ -67,25 +81,29 @@ class _CustomerHomeState extends State<CustomerHome> {
           });
           _pageController.animateToPage(
             index,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
+            duration: AppAnimations.medium,
+            curve: AppAnimations.iosEaseInOut,
           );
         },
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+          AnimatedBottomNavItem(
+            icon: Icons.home_outlined,
+            activeIcon: Icons.home,
             label: 'Home',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.map),
+          AnimatedBottomNavItem(
+            icon: Icons.map_outlined,
+            activeIcon: Icons.map,
             label: 'Map',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
+          AnimatedBottomNavItem(
+            icon: Icons.favorite_outline,
+            activeIcon: Icons.favorite,
             label: 'Favorites',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+          AnimatedBottomNavItem(
+            icon: Icons.person_outline,
+            activeIcon: Icons.person,
             label: 'Profile',
           ),
         ],
@@ -109,37 +127,38 @@ class _CustomerHomeState extends State<CustomerHome> {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: customerProvider.refreshVendors,
+      body: AnimatedRefreshIndicator(
+        onRefresh: _refreshVendors,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Welcome Card
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Hello, ${authProvider.userProfile?.name ?? 'Food Lover'}!',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+              AnimatedCard(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hello, ${authProvider.userProfile?.name ?? 'Food Lover'}!',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Discover amazing street food near you',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Discover amazing street food near you',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondary,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ),
+              ).animate()
+               .fadeIn(duration: AppAnimations.medium)
+               .slideY(begin: 0.3, end: 0),
               
               const SizedBox(height: 20),
               
@@ -298,7 +317,22 @@ class _CustomerHomeState extends State<CustomerHome> {
     }
 
     return Column(
-      children: openVendors.map((vendor) => _buildVendorCard(vendor, customerProvider)).toList(),
+      children: openVendors.asMap().entries.map((entry) {
+        final index = entry.key;
+        final vendor = entry.value;
+        return AnimatedVendorCard(
+          vendor: vendor,
+          onTap: () {
+            NavigationHelper.pushIOS(
+              context,
+              VendorDetailScreen(vendor: vendor),
+            );
+          },
+          margin: const EdgeInsets.only(bottom: 16),
+        ).animate(delay: Duration(milliseconds: 100 * index))
+         .fadeIn(duration: AppAnimations.medium)
+         .slideX(begin: 0.3, end: 0);
+      }).toList(),
     );
   }
 

@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../models/vendor_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/customer_provider.dart';
 import 'vendor_ratings_screen.dart';
 import 'add_rating_screen.dart';
+import '../../constants/app_animations.dart';
+import '../../constants/app_theme.dart';
+import '../../widgets/animated/animated_button.dart';
+import '../../widgets/animated/animated_card.dart';
+import '../../widgets/animated/page_transitions.dart';
 
 class VendorDetailScreen extends StatefulWidget {
   final VendorModel vendor;
@@ -20,14 +27,58 @@ class VendorDetailScreen extends StatefulWidget {
   State<VendorDetailScreen> createState() => _VendorDetailScreenState();
 }
 
-class _VendorDetailScreenState extends State<VendorDetailScreen> {
+class _VendorDetailScreenState extends State<VendorDetailScreen>
+    with TickerProviderStateMixin {
   GoogleMapController? _mapController;
   bool _isFollowing = false;
+  late ScrollController _scrollController;
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+  double _scrollOffset = 0.0;
 
   @override
   void initState() {
     super.initState();
     _checkFollowStatus();
+    _initializeAnimations();
+  }
+
+  void _initializeAnimations() {
+    _scrollController = ScrollController();
+    _fadeController = AnimationController(
+      duration: AppAnimations.medium,
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: AppAnimations.easeInOut,
+    ));
+
+    _scrollController.addListener(() {
+      setState(() {
+        _scrollOffset = _scrollController.offset;
+      });
+      
+      // Fade app bar based on scroll
+      final fadeValue = (_scrollOffset / 200).clamp(0.0, 1.0);
+      _fadeController.animateTo(fadeValue);
+    });
+
+    // Start entrance animation
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fadeController.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _fadeController.dispose();
+    super.dispose();
   }
 
   void _checkFollowStatus() {
@@ -38,6 +89,7 @@ class _VendorDetailScreenState extends State<VendorDetailScreen> {
   }
 
   Future<void> _toggleFollow() async {
+    HapticFeedback.lightImpact();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final customerProvider = Provider.of<CustomerProvider>(context, listen: false);
 
@@ -82,35 +134,90 @@ class _VendorDetailScreenState extends State<VendorDetailScreen> {
   Widget build(BuildContext context) {
     final customerProvider = Provider.of<CustomerProvider>(context);
     final distance = customerProvider.getDistanceToVendor(widget.vendor);
+    final parallaxOffset = _scrollOffset * 0.5;
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // App Bar with Image
-          SliverAppBar(
-            expandedHeight: 250,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              background: widget.vendor.imageUrl != null
-                  ? Image.network(
-                      widget.vendor.imageUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return _buildPlaceholderImage();
-                      },
-                    )
-                  : _buildPlaceholderImage(),
-            ),
-            actions: [
-              IconButton(
-                onPressed: _toggleFollow,
-                icon: Icon(
-                  _isFollowing ? Icons.favorite : Icons.favorite_border,
-                  color: _isFollowing ? Colors.red : Colors.white,
+      body: Stack(
+        children: [
+          // Main Content with Parallax
+          CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              // Hero Image with Parallax
+              SliverAppBar(
+                expandedHeight: 300,
+                pinned: true,
+                backgroundColor: Colors.transparent,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Stack(
+                    children: [
+                      // Parallax Image
+                      Transform.translate(
+                        offset: Offset(0, -parallaxOffset),
+                        child: Container(
+                          height: 350,
+                          width: double.infinity,
+                          child: widget.vendor.imageUrl != null
+                              ? Image.network(
+                                  widget.vendor.imageUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return _buildPlaceholderImage();
+                                  },
+                                )
+                              : _buildPlaceholderImage(),
+                        ),
+                      ),
+                      
+                      // Gradient Overlay
+                      Container(
+                        height: 350,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.3),
+                              Colors.black.withOpacity(0.7),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+                leading: Container(
+                  margin: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: IconButton(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      Navigator.of(context).pop();
+                    },
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  ),
+                ),
+                actions: [
+                  Container(
+                    margin: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: IconButton(
+                      onPressed: _toggleFollow,
+                      icon: Icon(
+                        _isFollowing ? Icons.favorite : Icons.favorite_border,
+                        color: _isFollowing ? AppTheme.iosRed : Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
 
           // Content
           SliverToBoxAdapter(

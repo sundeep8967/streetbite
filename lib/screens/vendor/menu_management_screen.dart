@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/menu_provider.dart';
 import '../../providers/vendor_provider.dart';
 import '../../models/menu_item_model.dart';
 import 'add_menu_item_screen.dart';
 import 'edit_menu_item_screen.dart';
+import '../../constants/app_animations.dart';
+import '../../constants/app_theme.dart';
+import '../../widgets/animated/animated_menu_item_card.dart';
+import '../../widgets/animated/animated_stats_card.dart';
+import '../../widgets/animated/animated_refresh_indicator.dart';
+import '../../widgets/animated/page_transitions.dart';
 
 class MenuManagementScreen extends StatefulWidget {
   const MenuManagementScreen({super.key});
@@ -28,6 +36,36 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
     
     if (vendorProvider.currentVendor != null) {
       menuProvider.loadMenuItems(vendorProvider.currentVendor!.id);
+    }
+  }
+
+  Future<void> _refreshMenuItems() async {
+    HapticFeedback.lightImpact();
+    _loadMenuItems();
+  }
+
+  void _editMenuItem(MenuItemModel item) {
+    HapticFeedback.lightImpact();
+    NavigationHelper.pushIOS(
+      context,
+      EditMenuItemScreen(menuItem: item),
+    );
+  }
+
+  Future<void> _toggleAvailability(MenuItemModel item, MenuProvider menuProvider) async {
+    HapticFeedback.mediumImpact();
+    final success = await menuProvider.toggleItemAvailability(item.id);
+    if (mounted && success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            item.isAvailable 
+                ? 'Item marked as unavailable'
+                : 'Item marked as available',
+          ),
+          backgroundColor: item.isAvailable ? AppTheme.iosRed : AppTheme.iosGreen,
+        ),
+      );
     }
   }
 
@@ -181,13 +219,23 @@ class _MenuManagementScreenState extends State<MenuManagementScreen> {
               Expanded(
                 child: menuProvider.filteredMenuItems.isEmpty
                     ? _buildEmptyState()
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: menuProvider.filteredMenuItems.length,
-                        itemBuilder: (context, index) {
-                          final item = menuProvider.filteredMenuItems[index];
-                          return _buildMenuItemCard(item, menuProvider);
-                        },
+                    : AnimatedRefreshIndicator(
+                        onRefresh: _refreshMenuItems,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: menuProvider.filteredMenuItems.length,
+                          itemBuilder: (context, index) {
+                            final item = menuProvider.filteredMenuItems[index];
+                            return AnimatedMenuItemCard(
+                              menuItem: item,
+                              index: index,
+                              onEdit: () => _editMenuItem(item),
+                              onDelete: () => _showDeleteConfirmation(item),
+                              onToggleAvailability: () => _toggleAvailability(item, menuProvider),
+                              margin: const EdgeInsets.symmetric(vertical: 4),
+                            );
+                          },
+                        ),
                       ),
               ),
             ],

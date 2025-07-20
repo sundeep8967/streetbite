@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:country_code_picker/country_code_picker.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/auth_provider.dart';
 import 'otp_verification_screen.dart';
+import '../../constants/app_animations.dart';
+import '../../constants/app_theme.dart';
+import '../../widgets/animated/animated_button.dart';
+import '../../widgets/animated/animated_card.dart';
+import '../../widgets/animated/page_transitions.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,14 +18,66 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with TickerProviderStateMixin {
   final TextEditingController _phoneController = TextEditingController();
+  final FocusNode _phoneFocusNode = FocusNode();
   String _countryCode = '+91';
   bool _isLoading = false;
+  
+  late AnimationController _slideController;
+  late AnimationController _fadeController;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAnimations();
+    _startAnimations();
+  }
+
+  void _initializeAnimations() {
+    _slideController = AnimationController(
+      duration: AppAnimations.medium,
+      vsync: this,
+    );
+    
+    _fadeController = AnimationController(
+      duration: AppAnimations.slow,
+      vsync: this,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _slideController,
+      curve: AppAnimations.iosEaseInOut,
+    ));
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: AppAnimations.easeInOut,
+    ));
+  }
+
+  void _startAnimations() async {
+    await Future.delayed(const Duration(milliseconds: 100));
+    _fadeController.forward();
+    await Future.delayed(const Duration(milliseconds: 200));
+    _slideController.forward();
+  }
 
   @override
   void dispose() {
     _phoneController.dispose();
+    _phoneFocusNode.dispose();
+    _slideController.dispose();
+    _fadeController.dispose();
     super.dispose();
   }
 

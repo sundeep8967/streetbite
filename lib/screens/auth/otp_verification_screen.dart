@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/auth_provider.dart';
 import 'user_type_selection_screen.dart';
+import '../../constants/app_animations.dart';
+import '../../constants/app_theme.dart';
+import '../../widgets/animated/animated_button.dart';
+import '../../widgets/animated/animated_card.dart';
+import '../../widgets/animated/animated_otp_input.dart';
+import '../../widgets/animated/page_transitions.dart';
 
 class OTPVerificationScreen extends StatefulWidget {
   final String verificationId;
@@ -17,36 +25,79 @@ class OTPVerificationScreen extends StatefulWidget {
   State<OTPVerificationScreen> createState() => _OTPVerificationScreenState();
 }
 
-class _OTPVerificationScreenState extends State<OTPVerificationScreen> {
-  final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+class _OTPVerificationScreenState extends State<OTPVerificationScreen>
+    with TickerProviderStateMixin {
   bool _isLoading = false;
+  String _otpCode = '';
+  
+  late AnimationController _slideController;
+  late AnimationController _fadeController;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAnimations();
+    _startAnimations();
+  }
+
+  void _initializeAnimations() {
+    _slideController = AnimationController(
+      duration: AppAnimations.medium,
+      vsync: this,
+    );
+    
+    _fadeController = AnimationController(
+      duration: AppAnimations.slow,
+      vsync: this,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _slideController,
+      curve: AppAnimations.iosEaseInOut,
+    ));
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: AppAnimations.easeInOut,
+    ));
+  }
+
+  void _startAnimations() async {
+    await Future.delayed(const Duration(milliseconds: 100));
+    _fadeController.forward();
+    await Future.delayed(const Duration(milliseconds: 200));
+    _slideController.forward();
+  }
 
   @override
   void dispose() {
-    for (var controller in _controllers) {
-      controller.dispose();
-    }
-    for (var node in _focusNodes) {
-      node.dispose();
-    }
+    _slideController.dispose();
+    _fadeController.dispose();
     super.dispose();
   }
 
   void _verifyOTP() async {
-    String otp = _controllers.map((controller) => controller.text).join();
-    
-    if (otp.length != 6) {
+    if (_otpCode.length != 6) {
+      HapticFeedback.lightImpact();
       _showSnackBar('Please enter complete OTP');
       return;
     }
 
     setState(() => _isLoading = true);
+    HapticFeedback.mediumImpact();
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     bool success = await authProvider.verifyOTP(
       verificationId: widget.verificationId,
-      smsCode: otp,
+      smsCode: _otpCode,
     );
 
     setState(() => _isLoading = false);

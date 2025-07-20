@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/vendor_provider.dart';
 import '../../models/vendor_model.dart';
 import 'vendor_registration_screen.dart';
 import 'menu_management_screen.dart';
 import 'vendor_feedback_dashboard.dart';
+import '../../constants/app_animations.dart';
+import '../../constants/app_theme.dart';
+import '../../widgets/animated/animated_status_toggle.dart';
+import '../../widgets/animated/animated_stats_card.dart';
+import '../../widgets/animated/animated_card.dart';
+import '../../widgets/animated/page_transitions.dart';
 
 class VendorDashboard extends StatefulWidget {
   const VendorDashboard({super.key});
@@ -14,11 +22,42 @@ class VendorDashboard extends StatefulWidget {
   State<VendorDashboard> createState() => _VendorDashboardState();
 }
 
-class _VendorDashboardState extends State<VendorDashboard> {
+class _VendorDashboardState extends State<VendorDashboard>
+    with TickerProviderStateMixin {
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+
   @override
   void initState() {
     super.initState();
+    _initializeAnimations();
     _loadVendorProfile();
+  }
+
+  void _initializeAnimations() {
+    _fadeController = AnimationController(
+      duration: AppAnimations.medium,
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fadeController,
+      curve: AppAnimations.easeInOut,
+    ));
+
+    // Start entrance animation
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fadeController.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
   }
 
   void _loadVendorProfile() async {
@@ -38,6 +77,7 @@ class _VendorDashboardState extends State<VendorDashboard> {
   }
 
   void _toggleStatus(bool isOpen) async {
+    HapticFeedback.mediumImpact();
     final vendorProvider = Provider.of<VendorProvider>(context, listen: false);
     final status = isOpen ? VendorStatus.open : VendorStatus.closed;
     
@@ -46,7 +86,7 @@ class _VendorDashboardState extends State<VendorDashboard> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(isOpen ? 'Stall is now Open!' : 'Stall is now Closed'),
-          backgroundColor: isOpen ? Colors.green : Colors.orange,
+          backgroundColor: isOpen ? AppTheme.iosGreen : AppTheme.iosRed,
         ),
       );
     } else if (mounted) {
@@ -230,46 +270,60 @@ class _VendorDashboardState extends State<VendorDashboard> {
     );
   }
 
-  Widget _buildActionCard({
+  Widget _buildAnimatedActionCard({
     required IconData icon,
     required String title,
     required String subtitle,
+    required Color color,
+    required Duration delay,
     required VoidCallback onTap,
   }) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 32,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+    return AnimatedCard(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              size: 24,
+              color: color,
+            ),
           ),
-        ),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textPrimary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppTheme.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
-    );
+    ).animate(delay: delay)
+     .fadeIn(duration: AppAnimations.medium)
+     .slideY(begin: 0.3, end: 0)
+     .scale(begin: const Offset(0.8, 0.8));
   }
 }
