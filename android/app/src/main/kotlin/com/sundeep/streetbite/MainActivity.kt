@@ -1,0 +1,5 @@
+package com.sundeep.streetbite
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity: FlutterActivity()
